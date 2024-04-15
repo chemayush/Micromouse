@@ -8,20 +8,20 @@ struct Cell {
   bool northWall, eastWall, southWall, westWall;
 };
 
-const int MAZE_SIZE = 4;
+const int MAZE_SIZE = 16;
 Cell maze[MAZE_SIZE][MAZE_SIZE];
 
 const int CENTER_X = MAZE_SIZE/2;
 const int CENTER_Y = MAZE_SIZE/2;
 
-int currX = 3;
-int currY = 3;
+int currX = 2;  // ckp1 - 15, ckp2 - 0;
+int currY = 10; // ckp1 - 0, ckp2 - 14;
 
 int nextX = 0;
 int nextY = 0;
 
-int prevX = 3;
-int prevY = 3;
+int prevX = 2;
+int prevY = 10;
 
 // Define the encoder pins
 #define ENC1_A_PIN 3 // Encoder A pin for Motor 1
@@ -39,7 +39,7 @@ int direction_increment = 1; // north +1, east +4, south -1, west -4
 int currBlock = 1;
 
 int lastDirection = 0;
-int currDirection = 0;
+int currDirection = 3;
 
 double rightDistance = 0;
 double leftDistance = 0;
@@ -79,6 +79,12 @@ VL53L0X sensor_left;
 
 int blocksCrossed = 0;
 
+int step2 = 0;
+int flag = 0;
+
+bool check = 0;
+int enc = 4255;
+
 void setup() {
   pinMode(MOTOR1_PIN_1, OUTPUT);
   pinMode(MOTOR1_PIN_2, OUTPUT);
@@ -108,6 +114,16 @@ void setup() {
 
   Serial.begin(115200);
 
+  if (currX == 0 && currY == 14) {
+    enc = 4220;
+  } else {
+    enc = 4268;
+  }
+
+  //findStartCoordinates1();
+
+  //delay(1500);
+
   initializeMaze();
   setDestination();
   //setWall(3, 0, 1);
@@ -127,12 +143,11 @@ void loop() {
   step();
   move();
 
-  if ( (currX == 1 && currY == 1) || (currX == 1 && currY == 2) || (currX == 2 && currY == 1) || (currX == 2 && currY == 2)) {
+  if ( (currX == 7 && currY == 7) || (currX == 7 && currY == 8) || (currX == 8 && currY == 7) || (currX == 8 && currY == 8)) {
     while (1) {
       stop(); // Emergency stop if the micromouse reaches a certain block
     }
   }
-
   //Serial.println(currDirection);
   //Serial.print(nextX);
   //Serial.println(currDirection);
@@ -140,7 +155,6 @@ void loop() {
 }
 
 void move() {
-
   if (leftDistance > 90 && rightDistance > 90) {
     forward();
   } else if (rightDistance < 100) {
@@ -152,7 +166,111 @@ void move() {
   } else {
     forward();
   }
+}
 
+void findStartCoordinates1() {
+  encoder1.write(0);
+  while (1) {
+    readTOF();
+    if (encoder1.read() >= 3990) {
+      step2++;
+      digitalWrite(13, (step2%2)*4);
+      if (!isRight()) {
+        currX = MAZE_SIZE - 1;
+        prevX = MAZE_SIZE - 1;
+        currY = 0;
+        prevY = 0;
+        Serial.println(currX);
+        Serial.println(currY);
+        break;
+      } else if (!isLeft()) {
+        currX = MAZE_SIZE - 1;
+        currY = MAZE_SIZE - 1;
+        prevX = MAZE_SIZE - 1;
+        prevY = MAZE_SIZE - 1;
+        Serial.println(currX);
+        Serial.println(currY);
+        break;
+      }
+      encoder1.write(0);
+    } else {
+      move();
+    }
+  }
+
+  encoder1.write(0);
+  turn180Degrees();
+
+  while (step2 != 0) {
+    readTOF();
+    move();
+    if (encoder1.read() >= 4015) {    // ckp 1 - , ckp 2 - 4015
+      step2--;
+      digitalWrite(13, (step2%2)*4);
+      encoder1.write(0);
+    }
+  }
+
+  turn180Degrees();
+  stop();
+}
+
+void findStartCoordinates() {
+  //encoder1.write(0);
+  //initializeMaze();
+  /*while (maze[startX][startY].westWall || maze[startX][startY].eastWall) {
+  }*/
+  while (isRight() && isLeft()) {  
+    digitalWrite(13, (blocksCrossed%2)*4);
+    readTOF(); 
+    step2f();  
+    move();
+  }
+
+  Serial.println(1);
+  turn180Degrees();
+  Serial.println(2);
+
+  while (step2 != 0) {
+    digitalWrite(13, (step2%2)*4);
+    readTOF();
+    step2b();
+    move();
+  }
+
+  turn180Degrees();
+  stop(); 
+  blocksCrossed = 0;
+}
+
+void step2f() {
+  readTOF();
+  if (encoder1.read() >= 4095) {  // 4015
+    encoder1.write(0);
+    blocksCrossed++;
+    if (!isRight()) {
+      currX = MAZE_SIZE - 1;
+      prevX = MAZE_SIZE - 1;
+      currY = 0;
+      prevY = 0;
+      turn180Degrees();
+    } else if (!isLeft()) {
+      currX = MAZE_SIZE - 1;
+      currY = MAZE_SIZE - 1;
+      prevX = MAZE_SIZE - 1;
+      prevY = MAZE_SIZE - 1;
+      turn180Degrees();
+    }
+  } else {
+    move();
+  }
+}
+
+void step2b() {
+  if (encoder1.read() >= 4015) {
+    encoder1.write(0);
+    blocksCrossed--;
+  }
 }
 
 void followRightWall() {
@@ -176,8 +294,8 @@ void followRightWall() {
   lastError = error;
 
   // Adjust motor speeds based on PID output for wall following
-  double leftSpeed = constrain(500 + output, 0, 700); // Adjust this based on your motor direction
-  double rightSpeed = constrain(500 - output, 0, 700); // Adjust this based on your motor direction
+  double leftSpeed = constrain(500 + output, 0, 750); // Adjust this based on your motor direction
+  double rightSpeed = constrain(500 - output, 0, 750); // Adjust this based on your motor direction
 
   // Apply motor speeds for wall following
   analogWrite(MOTOR1_PIN_1, leftSpeed);
@@ -207,8 +325,8 @@ void followLeftWall() {
   lastError = error;
 
   // Adjust motor speeds based on PID output for wall following
-  double leftSpeed = constrain(500 - output, 0, 700); // Adjust this based on your motor direction
-  double rightSpeed = constrain(500 + output, 0, 700); // Adjust this based on your motor direction
+  double leftSpeed = constrain(500 - output, 0, 750); // Adjust this based on your motor direction
+  double rightSpeed = constrain(500 + output, 0, 750); // Adjust this based on your motor direction
 
   // Apply motor speeds for wall following
   analogWrite(MOTOR1_PIN_1, leftSpeed);
@@ -218,7 +336,15 @@ void followLeftWall() {
 }
 
 void step() {
-  if (encoder1.read() >= 4015) {
+
+  if (currX == 0 && currY == 14 && check == false) {
+    enc = 4220;
+    check = true;
+    stop();
+    //delay(500);
+  } 
+
+  if (encoder1.read() >= enc) { // ckp1 - 4238, ckp2 - 4220
     encoder1.write(0);
     blocksCrossed++;
     digitalWrite(13, (blocksCrossed%2)*4);
@@ -242,12 +368,8 @@ void step() {
     setWalls();
     resetMaze();
     floodFill();
-    //printMaze();
-    //Serial.print(1);
     findNextCell();
-    //Serial.print(2);
     nextTurn();
-    //Serial.print(3);
   }
 }
 
@@ -275,7 +397,6 @@ void nextTurn() {
       turn90DegreesLeft();
     } else {
       stop();
-      return -1; // Error
     }
   } else if (currDirection == 1) {
     if (dx == -1) { // Need to move North
@@ -288,7 +409,6 @@ void nextTurn() {
       turn180Degrees();
     } else {
       stop();
-      return -1; // Error
     }
   } else if (currDirection == 2) {
     if (dx == -1) { // Need to move North
@@ -301,7 +421,6 @@ void nextTurn() {
       turn90DegreesRight();
     } else {
       stop();
-      return -1; // Error
     }
   } else if (currDirection == 3) {
     if (dx == -1) { // Need to move North
@@ -314,7 +433,6 @@ void nextTurn() {
       forward();
     } else {
       stop();
-      return -1; // Error
     }
   }
 }
@@ -357,8 +475,8 @@ void turn90DegreesRight() {
     motorSpeed1 = turn_Kp * error1 + turn_Ki * integral1 + turn_Kd * derivative1;
     motorSpeed2 = turn_Kp * error2 + turn_Ki * integral2 + turn_Kd * derivative2;
 
-    motorSpeed1 = constrain(motorSpeed1, -512, 512);
-    motorSpeed2 = constrain(motorSpeed2, -512, 512);
+    motorSpeed1 = constrain(motorSpeed1, -650, 650);
+    motorSpeed2 = constrain(motorSpeed2, -650, 650);
     // Update last errors for each motor
     lastError1 = error1;
     lastError2 = error2;
@@ -437,8 +555,8 @@ void turn90DegreesLeft() {
     motorSpeed1 = turn_Kp * error1 + turn_Ki * integral1 + turn_Kd * derivative1;
     motorSpeed2 = turn_Kp * error2 + turn_Ki * integral2 + turn_Kd * derivative2;
 
-    motorSpeed1 = constrain(motorSpeed1, -512, 512);
-    motorSpeed2 = constrain(motorSpeed2, -512, 512);
+    motorSpeed1 = constrain(motorSpeed1, -650, 650);
+    motorSpeed2 = constrain(motorSpeed2, -650, 650);
     // Update last errors for each motor
     lastError1 = error1;
     lastError2 = error2;
@@ -477,11 +595,17 @@ void turn90DegreesLeft() {
 
 void turn180Degrees() {
   // Reset encoder counts to zero
-
-  while (topDistance > 55) {
+  if (topDistance < 90) {
+    while (topDistance > 55) {
+      readTOF();
+      move();
+    }
+  }
+  /*while (topDistance > 55) {
     readTOF();
     move();
-  }
+  }*/
+  //if ()
   encoder1.write(0);
   encoder2.write(0);
 
@@ -518,8 +642,8 @@ void turn180Degrees() {
     motorSpeed1 = turn_Kp * error1 + turn_Ki * integral1 + turn_Kd * derivative1;
     motorSpeed2 = turn_Kp * error2 + turn_Ki * integral2 + turn_Kd * derivative2;
 
-    motorSpeed1 = constrain(motorSpeed1, -512, 512);
-    motorSpeed2 = constrain(motorSpeed2, -512, 512);
+    motorSpeed1 = constrain(motorSpeed1, -650, 650);
+    motorSpeed2 = constrain(motorSpeed2, -650, 650);
     // Update last errors for each motor
     lastError1 = error1;
     lastError2 = error2;
@@ -791,7 +915,7 @@ void printMaze() {
 }
 
 bool isTop() {
-  if (topDistance < 100) {
+  if (topDistance < 120) {
     return true;
   } else {
     return false;
@@ -799,7 +923,7 @@ bool isTop() {
 }
 
 bool isRight() {
-  if (rightDistance < 100) {
+  if (rightDistance < 140) {
     return true;
   } else {
     return false;
@@ -807,7 +931,7 @@ bool isRight() {
 }
 
 bool isLeft() {
-  if (leftDistance < 100) {
+  if (leftDistance < 140) {
     return true;
   } else {
     return false;
