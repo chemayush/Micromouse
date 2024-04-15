@@ -38,7 +38,14 @@ It resets the floodValues of each cell to -1 before calling the floodFill() func
 9. isValidNeighbor(int x, int y):
 checks if the coordinates passed in the function are valid neighbour of the current coordinates or not.
 
-10. floodFill():
+10. floodFill(): 
+It floods the maze with new floodValues based on current walls to find the current shortest path for the maze.
+
+11. findNextCell():
+It finds the next cell to proceed to with a smaller floodValue.
+
+12. setWalls():
+It sets the wall in the 'maze' data structure based on the ToF values.
 
 
 
