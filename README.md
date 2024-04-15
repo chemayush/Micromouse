@@ -14,31 +14,31 @@ Functions in the code:
 1. move():
 It does the decision making for choosing the type of wall-following depending on the current presence of walls around the mouse.
 
-3. findStartCoordinates1()
+2. findStartCoordinates1():
 It finds the start position of the mouse i.e. at which corner of the maze did the mouse start.
 
-4. followRightWall() / followLeftWall()
+3. followRightWall() / followLeftWall():
 This function uses PID control to follow the wall on right/left side of the mouse.
 
-5. step()
+4. step():
 This function is called everytime the mouse moves from one cell of the maze to another. It sets the current coordinates, updates the presence of walls in the 'maze' data structure, floods the maze again and finds the new shortest path based on updated walls and then finally calculates the next turn to be taken.
 
-6. nextTurn()
+5. nextTurn():
 It calculates the next turn to be taken based on the current and next coordinates, and the current direction of the mouse.
 
-7. setDestination()
+6. setDestination():
 This function sets the destination of the mouse as the center 4 squares of the maze. It is called in the setup() function.
 
-8. initializeMaze()
+7. initializeMaze():
 It initialzes the maze based the provided dimensions of the maze. Initially maze is assumed to have only the side walls and no walls inside the maze.
 
-9. resetMaze()
+8. resetMaze():
 It resets the floodValues of each cell to -1 before calling the floodFill() function to flood the maze again.
 
-10. isValidNeighbor(int x, int y)
+9. isValidNeighbor(int x, int y):
 checks if the coordinates passed in the function are valid neighbour of the current coordinates or not.
 
-11. floodFill()
+10. floodFill():
 
 
 
