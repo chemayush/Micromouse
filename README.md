@@ -1,5 +1,6 @@
 # Micromouse
 This project involves making of a micromouse (a very small maze solving robot) based on the FloodFill algorithm.
+
 Won the BITS Pilani, Pilani Micromous '24.
 
 Components:
