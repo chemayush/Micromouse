@@ -114,13 +114,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  if (currX == 0 && currY == 14) {
-    enc = 4220;
-  } else {
-    enc = 4268;
-  }
-
-  //findStartCoordinates1();
+  findStartCoordinates1();
 
   //delay(1500);
 
@@ -154,6 +148,8 @@ void loop() {
   //printMaze();
 }
 
+
+
 void move() {
   if (leftDistance > 90 && rightDistance > 90) {
     forward();
@@ -167,6 +163,8 @@ void move() {
     forward();
   }
 }
+
+
 
 void findStartCoordinates1() {
   encoder1.write(0);
@@ -215,33 +213,8 @@ void findStartCoordinates1() {
   stop();
 }
 
-void findStartCoordinates() {
-  //encoder1.write(0);
-  //initializeMaze();
-  /*while (maze[startX][startY].westWall || maze[startX][startY].eastWall) {
-  }*/
-  while (isRight() && isLeft()) {  
-    digitalWrite(13, (blocksCrossed%2)*4);
-    readTOF(); 
-    step2f();  
-    move();
-  }
 
-  Serial.println(1);
-  turn180Degrees();
-  Serial.println(2);
 
-  while (step2 != 0) {
-    digitalWrite(13, (step2%2)*4);
-    readTOF();
-    step2b();
-    move();
-  }
-
-  turn180Degrees();
-  stop(); 
-  blocksCrossed = 0;
-}
 
 void step2f() {
   readTOF();
@@ -266,12 +239,16 @@ void step2f() {
   }
 }
 
+
+
 void step2b() {
   if (encoder1.read() >= 4015) {
     encoder1.write(0);
     blocksCrossed--;
   }
 }
+
+
 
 void followRightWall() {
 
@@ -304,6 +281,10 @@ void followRightWall() {
   analogWrite(MOTOR2_PIN_2, 0);
 }
 
+
+
+
+
 void followLeftWall() {
 
   /*if (topDistance < 55) {
@@ -334,6 +315,8 @@ void followLeftWall() {
   analogWrite(MOTOR2_PIN_1, rightSpeed);
   analogWrite(MOTOR2_PIN_2, 0);
 }
+
+
 
 void step() {
 
@@ -372,6 +355,8 @@ void step() {
     nextTurn();
   }
 }
+
+
 
 void nextTurn() {
   int dx = nextX - currX;
@@ -436,6 +421,9 @@ void nextTurn() {
     }
   }
 }
+
+
+
 
 void turn90DegreesRight() {
   // Reset encoder counts to zero
@@ -512,6 +500,9 @@ void turn90DegreesRight() {
   encoder1.write(0);
   encoder2.write(0);
 }
+
+
+
 
 void turn90DegreesLeft() {
   // Reset encoder counts to zero
@@ -592,6 +583,8 @@ void turn90DegreesLeft() {
   encoder1.write(0);
   encoder2.write(0);
 }
+
+
 
 void turn180Degrees() {
   // Reset encoder counts to zero
@@ -680,12 +673,16 @@ void turn180Degrees() {
   encoder2.write(0);
 }
 
+
+
 void stop() {
   analogWrite(MOTOR1_PIN_1, 0);
   analogWrite(MOTOR1_PIN_2, 0);
   analogWrite(MOTOR2_PIN_1, 0);
   analogWrite(MOTOR2_PIN_2, 0);
 }
+
+
 
 void forward() {
   /*if (topDistance < 55) {
@@ -702,11 +699,15 @@ void forward() {
   analogWrite(MOTOR2_PIN_2, 0);
 }
 
+
+
 void readTOF() {
   rightDistance = sensor_right.readRangeContinuousMillimeters();
   topDistance = sensor_top.readRangeContinuousMillimeters();
   leftDistance = sensor_left.readRangeContinuousMillimeters();
 }
+
+
 
 void setDestination() {
   for (int i = CENTER_X - 1; i <= CENTER_X; i++) {
@@ -716,9 +717,13 @@ void setDestination() {
   }
 }
 
+
+
 void setDestination4x4(int x, int y) {
 	maze[x][y].floodValue = 0;
 }
+
+
 
 void initializeMaze() {
   for (int i = 0; i < MAZE_SIZE; i++) {
@@ -734,6 +739,8 @@ void initializeMaze() {
   }
 }
 
+
+
 void resetMaze() {
   for (int i = 0; i < MAZE_SIZE; i++) {
     for (int j = 0; j < MAZE_SIZE; j++) {
@@ -744,6 +751,8 @@ void resetMaze() {
   setDestination();
 }
 
+
+
 void resetMaze4x4() {
   for (int i = 0; i < MAZE_SIZE; i++) {
     for (int j = 0; j < MAZE_SIZE; j++) {
@@ -753,6 +762,8 @@ void resetMaze4x4() {
   
   setDestination();
 }
+
+
 
 bool isValidNeighbor(int x, int y) {
   return (x >= 0 && x < MAZE_SIZE && y >= 0 && y < MAZE_SIZE);
@@ -798,6 +809,9 @@ void floodFill() {
     }
   }
 }
+
+
+
 
 void findNextCell() {
   int minFloodValue = maze[currX][currY].floodValue - 1; // Look for values one less
@@ -876,6 +890,8 @@ void findNextCell() {
   }
 
 }
+
+
 
 void setWall(int x, int y, int dir) {
 	
